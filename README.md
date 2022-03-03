@@ -114,11 +114,10 @@ threading_lock.cpp
 #include <assert.h>
 #include <pthread.h> 
 #include <chrono>
-#include <mutex>
 
 using namespace std;
 
-std::mutex mtx;
+pthread_mutex_t mtx;
 
 void *printing(void *arg){
 	//simply prints out a string
@@ -130,7 +129,7 @@ void *truth(void *arg){
 	//prints out a truth or a lie if the value parameter is true or false, respectively
 	bool value = *((bool*)(arg));
 	int count = 1;
-	mtx.lock();
+	pthread_mutex_lock(&mtx);
 	while (count <= 10){
 		if (value){
 			cout << "#" << count << ": 377 is cool!\n";
@@ -139,7 +138,7 @@ void *truth(void *arg){
 		}
 		count++;
 	}
-	mtx.unlock();
+	pthread_mutex_unlock(&mtx);
 	return NULL;
 }
 
