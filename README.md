@@ -92,7 +92,7 @@ int main() {
 }
 ```
 
-As can be seen, using join() pauses the main method, but does not necessarily pause the other threads from running since they were created before join() is called. However, the main method will wait until thread one is finished to go past one.join(), until thread two is finished to go past two.join(), and until thread three is finished to go past three.join().
+As can be seen, using pthread_join() pauses the main method, but does not necessarily pause the other threads from running since they were created before pthread_join() is called. However, the main method will wait until thread one is finished to go past `rc = pthread_join(one, NULL)`, until thread two is finished to go past `rc = pthread_join(two, NULL)`, and until thread three is finished to go past `rc = pthread_join(three, NULL)`.
 
 ## Part 2: GDB (5 Points)
 
@@ -174,4 +174,4 @@ int main() {
 }
 ```
 
-As you can see when running this code, thread #1 will always finish printing out its 10 statements before thread #3 prints out any of its 10 statements. This is because when we lock mtx at the start of truth(), it prevents further calls of truth() to progress past that point until we call mtx.unlock() from the same thread that locked it. In essence, this allows us to stop any threads that rely on mtx, ensuring that certain pieces of code do not run at the same time as one another even if we want multiple processes to be running simultaneously.
+As you can see when running this code, thread #1 will always finish printing out its 10 statements before thread #3 prints out any of its 10 statements. This is because when we lock mtx at the start of truth(), it prevents further calls of truth() to progress past that point until we call `pthread_mutex_unlock(&mtx)` from the same thread that locked it. In essence, this allows us to stop any threads that rely on mtx, ensuring that certain pieces of code do not run at the same time as one another even if we want multiple processes to be running simultaneously.
