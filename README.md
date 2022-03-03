@@ -15,7 +15,7 @@ Please read through this lab and follow the instructions. After you do that, vis
 Once you have logged in to Edlab, you can clone this repo using
 
 ```bash
-git clone https://github.com/umass-cs-377/377-lab-threading.git
+git clone https://github.com/umass-cs-377/377-lab-threads.git
 ```
 
 Then you can use `cd` to open the directory you just cloned:
