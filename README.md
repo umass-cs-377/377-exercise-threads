@@ -174,4 +174,4 @@ int main() {
 }
 ```
 
-As you can see when running this code, thread #1 will always finish printing out its 10 statements before thread #3 prints out any of its 10 statements. This is because when we lock mtx at the start of truth(), it prevents further calls of truth() to progress past that point until we call `pthread_mutex_unlock(&mtx)` from the same thread that locked it. In essence, this allows us to stop any threads that rely on mtx, ensuring that certain pieces of code do not run at the same time as one another even if we want multiple processes to be running simultaneously.
+As you can see when running this code, thread `one` or `three` will always finish printing out its 10 statements before the other prints out any of its 10 statements. This is because when we lock mtx at the start of truth(), it prevents further calls of truth() to progress past that point until we call `pthread_mutex_unlock(&mtx)` from the same thread that locked it. In essence, this allows us to stop any threads that rely on mtx, ensuring that certain pieces of code do not run at the same time as one another even if we want multiple processes to be running simultaneously.
