@@ -1,24 +1,23 @@
+CC=g++
 CXX=g++
-CXXFLAGS += -g -Wall -Wextra -pthread
-CPPFLAGS += -isystem src -std=c++11
 
-MKDIR_P = mkdir -p
-OBJ_DIR = obj
+CFLAGS=-g -Wall
+CXXFLAGS=-g -Wall
 
-all: threading threading_lock
+.PHONY: default
+default: threading threading_lock
 
-${OBJ_DIR}:
-	${MKDIR_P} ${OBJ_DIR}
+threading: threading.o
 
-obj/%.o: %.cpp ${OBJ_DIR}
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
+threading.o: threading.cpp
 
-threads: obj/threading.o
-	$(CXX) -o $@ $^
+threading_lock: threading_lock.o
 
-threads_2: obj/threading_lock.o
-	$(CXX) -o $@ $^
+threading_lock.o: threading_lock.cpp
 
+.PHONY: clean
 clean:
-	rm -f *~ obj/*.o *.zip
-	rm -f threading threading_lock
+	rm -rf *.o threading_lock threading
+
+.PHONY: all
+all: clean default
