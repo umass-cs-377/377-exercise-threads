@@ -105,17 +105,8 @@ int main() {
 
 As can be seen, using `pthread_join()` pauses the main method, but does not necessarily pause the other threads from running since they were created before `pthread_join()` is called. However, the main method will wait until thread one is finished to go past `rc = pthread_join(one, NULL)`, until thread two is finished to go past `rc = pthread_join(two, NULL)`, and until thread three is finished to go past `rc = pthread_join(three, NULL)`.
 
-## Part 2: GDB
 
-You have seen the basics of `gdb` before. In this exercise we will be focused on using `gdb` to debug programs that use multiple threads. To run `gdb` on a process that uses multiple threads, simply open it with gdb like any other executable (`gdb PROGRAM`, where `PROGRAM` is the name of the executable). When you do so, you should be able to see output as such:
-
-`[New Thread 0x7f85e5bce700 (LWP 364)]`
-
-As can be seen above, the memory address is shown for the created thread in the form 0x\_\_\_\_, and the LWP address for the thread is shown after LWP. The LWP address of a thread isn’t something we will work with in this class, but it useful to know that it is the identifier assigned to the thread by the operating system. In the above image, the address of the thread is `0x7f85e5bce700`, and the LWP of the thread is `364`.
-
-We can also find out more information about threads through our use of `gdb`. The `info threads` command will list the info in the screenshot for all currently running threads in the process, as well as the id of its originating thread (the thread that created the thread). The thread we are currently in will have an asterisk to its left. Threads that request time to wait will also show the amount of time they requested and need – the threads in `threading.cpp` will do this when run via `gdb`. Each of the threads also has a local ID listed on the right – using `gdb`, we can switch between these threads with the command `thread ID`, where `ID` is the id of the thread we are trying to switch to.
-
-## Part 3: Mutex
+## Part 2: Mutex
 
 Threads can be extremely useful, but they can also encounter errors when they attempt to modify the same memory as one another. For example, if two threads each try to increment a value by 1, it may be that both operations occur at the same time, and the value is only incremented once instead of the two times it should be incremented instead. For this reason, we use various techniques to ensure that critical data components are not modified outside of their desired scope. One of these structures is called a lock, which is shared between threads and acts as per its name to prevent other threads from accessing sensitive data while it is locked. Please look at the modified `threading.cpp` below, called `threading_lock.cpp`:
 
@@ -187,3 +178,84 @@ int main() {
 ```
 
 As you can see when running this code, thread `one` or `three` will always finish printing out its 10 statements before the other prints out any of its 10 statements. This is because when we lock `mtx` at the start of `truth()`, it prevents further calls of `truth()` to progress past that point until we call `pthread_mutex_unlock(&mtx)` from the same thread that locked it. In essence, this allows us to stop any threads that rely on `mtx`, ensuring that certain pieces of code do not run at the same time as one another even if we want multiple processes to be running simultaneously.
+
+
+## Part 3 Condition Variable
+
+It is often not enough to ensure mutual exclusion but also essential to ensure order. In these circumstances, C provides us with Condition Variables. There are three steps we need to take to implement condition variables properly. First, we need a condition to become true. For example, there is an empty spot in an array. Next, we need a condition variable that threads wait to be signaled on. Note this is different from the condition in step one, as condition variables do not have a true/false value. Finally, we need to create a mutex so that only one thread can execute simultaneously. The following program is a simple program implementation with the condition variables. 
+
+```c
+#include <iostream>
+#include <assert.h>
+#include <pthread.h> 
+#include <chrono>
+
+using namespace std;
+
+pthread_mutex_t m1 = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t cv1 = PTHREAD_COND_INITIALIZER;
+bool pt_done = false; //print_threads done
+bool pa_done = false; //print_are done
+
+
+void *print_threads(void *arg){
+    cout << "threads" << endl;
+
+    pthread_mutex_lock(&m1);
+    pt_done = true;
+    pthread_cond_signal(&cv1);
+    pthread_mutex_unlock(&m1);
+    return NULL;
+}
+
+void *print_are(void *arg){
+    pthread_mutex_lock(&m1);
+    while (!pt_done)  
+        pthread_cond_wait(&cv1, &m1);
+    cout << "are" << endl;
+    pthread_mutex_unlock(&m1);
+    return NULL;
+}
+
+void *print_cool(void *arg){
+
+    cout << "cool!" << endl;
+    
+    return NULL;
+}
+
+int main() {
+    pthread_t t1, t2, t3;
+    int rc;
+	
+    // Create the threads 
+    rc = pthread_create(&t1, NULL, print_threads, NULL);
+    assert(rc == 0);
+    rc = pthread_create(&t2, NULL, print_are, NULL);
+    assert(rc == 0);
+    rc = pthread_create(&t3, NULL, print_cool, NULL);
+    assert(rc == 0);
+	
+    // clean up
+    rc = pthread_join(t1, NULL);
+    assert(rc == 0);
+    rc = pthread_join(t2, NULL);
+    assert(rc == 0);
+    rc = pthread_join(t3, NULL);
+    assert(rc == 0);
+
+    return 0;
+}
+
+```
+In the code above, we create three threads, each calling one of three functions: `print_threads`, `print_are`, and `print_cool`. In `print_threads`, we first print the string "threads". Next, we grab the lock `m1` because we will set the shared variable `pt_done = true`. After setting the value to true, we call `pthread_cond_signal()` to notify all sleeping threads that the condition they have been waiting for has changed. This will wake up all the threads waiting for the condition to become true. Finally, we can release the lock. In `print_are()` we first need to grab the lock `m1`. That is because we want to look at a shared variable. If we do not capture the lock, it may change while looking at it (remember `!pt_done` is two instructions, not one). Next, we loop until the condition becomes true. If the condition is false, we call `pthread_cond_wait()`. The call to this function will release the lock and put the thread to sleep. Importantly, before the function returns, it will grab the lock again and than return. Finally, when we wake up and break out of the loop, the condition is true, and we have the lock, so we print and release the lock. 
+
+## Part 4: GDB (no points)
+
+You have seen the basics of `gdb` before. In this exercise we will be focused on using `gdb` to debug programs that use multiple threads. To run `gdb` on a process that uses multiple threads, simply open it with gdb like any other executable (`gdb PROGRAM`, where `PROGRAM` is the name of the executable). When you do so, you should be able to see output as such:
+
+`[New Thread 0x7f85e5bce700 (LWP 364)]`
+
+As can be seen above, the memory address is shown for the created thread in the form 0x\_\_\_\_, and the LWP address for the thread is shown after LWP. The LWP address of a thread isn’t something we will work with in this class, but it useful to know that it is the identifier assigned to the thread by the operating system. In the above image, the address of the thread is `0x7f85e5bce700`, and the LWP of the thread is `364`.
+
+We can also find out more information about threads through our use of `gdb`. The `info threads` command will list the info in the screenshot for all currently running threads in the process, as well as the id of its originating thread (the thread that created the thread). The thread we are currently in will have an asterisk to its left. Threads that request time to wait will also show the amount of time they requested and need – the threads in `threading.cpp` will do this when run via `gdb`. Each of the threads also has a local ID listed on the right – using `gdb`, we can switch between these threads with the command `thread ID`, where `ID` is the id of the thread we are trying to switch to.
