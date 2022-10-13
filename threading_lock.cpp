@@ -5,7 +5,7 @@
 
 using namespace std;
 
-pthread_mutex_t mtx;
+pthread_mutex_t mtx = PTHREAD_MUTEX_INITIALIZER;
 
 void *printing(void *arg){
 	//simply prints out a string
