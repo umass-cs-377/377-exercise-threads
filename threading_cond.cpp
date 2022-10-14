@@ -1,7 +1,6 @@
 #include <iostream>
 #include <assert.h>
-#include <pthread.h> 
-#include <chrono>
+#include <pthread.h>
 
 using namespace std;
 

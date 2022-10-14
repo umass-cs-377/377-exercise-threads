@@ -26,11 +26,10 @@ With many programs, it can be advantageous to have multiple threads of execution
 
 **`threading.cpp`**
 
-```c
+```cpp
 #include <iostream>
-#include <assert.h>
+#include <assert.h> 
 #include <pthread.h>
-#include <chrono>
 
 using namespace std;
 
@@ -41,8 +40,8 @@ void *printing(void *arg){
 }
 
 void *truth(void *arg){
-	// prints out a truth or a lie if the value parameter is true or false,
-	// respectively
+	// prints out a truth or a lie if the value
+	// of the parameter is true or false, respectively
 	bool value = *((bool*)(arg));
 	int count = 1;
 	while (count <= 10){
@@ -63,40 +62,37 @@ int main() {
 
 	// Setting up values to pass in as arguments
 	bool truth_vals[2] = {false, true};
-
+	
 	// Creating Threads
 
-	// Creates a thread that will run the truth() method with
-	// the parameter of 'false'
+	// Creates a thread that will run the truth function with parameter false
 	rc = pthread_create(&one, NULL, truth, &(truth_vals[0]));
+	assert(rc == 0); // Makes sure thread one was created successfully
 
-	//Creates a thread that will run the printing() method
+	// Creates a thread that will run the printing function
 	rc = pthread_create(&two, NULL, printing, NULL);
+	assert(rc == 0); // Makes sure thread two was created successfully
 
-  // Creates a thread that will run the truth() method with
-	// the parameter of 'true'
+	// Creates a thread that will run the truth function with parameter true
 	rc = pthread_create(&three, NULL, truth, &(truth_vals[1]));
+	assert(rc == 0); // Makes sure thread three was created successfully
 
-	// Each of the below lines starts a thread, and pauses the execution
-	// of the main function until each of them is finished.
-	rc = pthread_join(one, NULL); //Runs thread one
-	assert(rc == 0); //Makes sure thread one ran correctly
+	// Each of the below lines pauses the execution of
+	// the main thread until the specified thread is finished.
+	// Also it cleans up the thread, which prevents zombie threads from
+	// using up system resources.
+	rc = pthread_join(one, NULL); // Wait for thread one to finish
+	assert(rc == 0); // Makes sure thread one ran successfully
 	cout << "Thread #1 finished.\n";
 
-	// Joins thread two
-	rc = pthread_join(two, NULL);
-
-	// Makes sure thread two ran correctly
-	assert(rc == 0);
+	rc = pthread_join(two, NULL); // Wait for thread two to finish
+	assert(rc == 0); // Makes sure thread two ran successfully
 	cout << "Thread #2 finished.\n";
 
- 	// Joins thread three
-	rc = pthread_join(three, NULL);
-
-	// Makes sure thread three ran correctly
-	assert(rc == 0);
-
+	rc = pthread_join(three, NULL); // Wait for thread three to finish
+	assert(rc == 0); // Makes sure thread three ran successfully
 	cout << "Thread #3 finished.\n";
+
 	cout << "All threads finished.\n";
 
 	return 0;
@@ -112,24 +108,24 @@ Threads can be extremely useful, but they can also encounter errors when they at
 
 **`threading_lock.cpp`**
 
-```c
+```cpp
 #include <iostream>
 #include <assert.h>
 #include <pthread.h>
-#include <chrono>
 
 using namespace std;
 
-pthread_mutex_t mtx;
+pthread_mutex_t mtx = PTHREAD_MUTEX_INITIALIZER;
 
 void *printing(void *arg){
-	//simply prints out a string
+	// simply prints out a string
 	cout << "377 is a class!\n";
 	return NULL;
 }
 
 void *truth(void *arg){
-	//prints out a truth or a lie if the value parameter is true or false, respectively
+	// prints out a truth or a lie if the value
+	// of the parameter is true or false, respectively
 	bool value = *((bool*)(arg));
 	int count = 1;
 	pthread_mutex_lock(&mtx);
@@ -150,25 +146,37 @@ int main() {
 	int rc;
 	cout << "Beginning Threads.\n";
 
-	//Setting up values to pass in as arguments
+	// Setting up values to pass in as arguments
 	bool truth_vals[2] = {false, true};
+	
+	// Creating Threads
 
-	//Creating Threads
-	rc = pthread_create(&one, NULL, truth, &(truth_vals[0])); //Creates a thread that will run the truth() method with the parameter of 'false'
-	rc = pthread_create(&two, NULL, printing, NULL); //Creates a thread that will run the printing() method
-	rc = pthread_create(&three, NULL, truth, &(truth_vals[1])); //Creates a thread that will run the truth() method with the parameter of 'true'
+	// Creates a thread that will run the truth function with parameter false
+	rc = pthread_create(&one, NULL, truth, &(truth_vals[0]));
+	assert(rc == 0); // Makes sure thread one was created successfully
 
-	//Each of the below lines starts a thread, and pauses the execution of the main function until each of them is finished.
-	rc = pthread_join(one, NULL); //Runs thread one
-	assert(rc == 0); //Makes sure thread one ran correctly
+	// Creates a thread that will run the printing function
+	rc = pthread_create(&two, NULL, printing, NULL);
+	assert(rc == 0); // Makes sure thread two was created successfully
+
+	// Creates a thread that will run the truth function with parameter true
+	rc = pthread_create(&three, NULL, truth, &(truth_vals[1]));
+	assert(rc == 0); // Makes sure thread three was created successfully
+
+	// Each of the below lines pauses the execution of
+	// the main thread until the specified thread is finished.
+	// Also it cleans up the thread, which prevents zombie threads from
+	// using up system resources.
+	rc = pthread_join(one, NULL); // Wait for thread one to finish
+	assert(rc == 0); // Makes sure thread one ran successfully
 	cout << "Thread #1 finished.\n";
 
-	rc = pthread_join(two, NULL); //Runs thread two
-	assert(rc == 0); //Makes sure thread two ran correctly
+	rc = pthread_join(two, NULL); // Wait for thread two to finish
+	assert(rc == 0); // Makes sure thread two ran successfully
 	cout << "Thread #2 finished.\n";
 
-	rc = pthread_join(three, NULL); //Runs thread three
-	assert(rc == 0); //Makes sure thread three ran correctly
+	rc = pthread_join(three, NULL); // Wait for thread three to finish
+	assert(rc == 0); // Makes sure thread three ran successfully
 	cout << "Thread #3 finished.\n";
 
 	cout << "All threads finished.\n";
@@ -187,8 +195,7 @@ It is often not enough to ensure mutual exclusion but also essential to ensure o
 ```c
 #include <iostream>
 #include <assert.h>
-#include <pthread.h> 
-#include <chrono>
+#include <pthread.h>
 
 using namespace std;
 
